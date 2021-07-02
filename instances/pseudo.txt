@@ -1,0 +1,7 @@
+para cada worker:
+	para cada vertice:
+		para cada aresta do vertice:
+			menor = 9999
+			se (custo do vertice adj < menor) E (vertice adj nao esta na solução)
+				menor = vertice adj
+				adicionar vertice a a soluçao para esse worker
