@@ -8,7 +8,7 @@ class Routes:
     def __init__(self, filename):
         self.dim, self.p = self.get_dim_p(filename)
         df = pd.read_fwf(filename, sep=" ", skiprows=3, header=None)
-        self.graph = Graph.Weighted_Adjacency(df.to_numpy(), 'undirected', attr='cost', loops=False)
+        self.graph = Graph.Weighted_Adjacency(df.to_numpy(), 'directed', attr='cost', loops=True)
         n_workers = math.ceil((self.dim-1)/self.p)
         self.workers = [[] for _ in range(n_workers)]
 
@@ -25,42 +25,65 @@ class Routes:
         lyt = self.graph.layout("kk")
         plot(self.graph, layout=lyt)
 
-    def describe_edges(self):
-        edges = self.graph.es()
-        for each in edges:
+    def describe_edges(self, edge_list):
+        for each in edge_list:
             print('Edge {} with cost {}'.format(each.tuple, each['cost']))
 
+    def print_routes(self):
+        for idx, worker in enumerate(self.workers):
+            print('WORKER #{}: {}'.format(idx, worker))
+
+    def get_solution_value(self):
+        total = 0
+        for worker in self.workers:
+            for i, value in enumerate(worker[:len(worker)-1]):
+                edge = self.graph.es.find(_from=value, _to=worker[i+1])
+                total += edge['cost']
+        print('Solution = {}'.format(total))
+        return total
+
+    def write_solution_to_file(self, filename):
+        total = 0
+        arquivo = open('solutions/'+filename, 'a')
+        for worker in self.workers:
+            for idx, value in enumerate(worker):
+                if idx == (len(worker) - 1):
+                    arquivo.write(str(value) + ' ; ')
+                else:
+                    arquivo.write(str(value) + ', ')
+        arquivo.close()
+
+
     def nearest_neighbor(self):
-        vertex_list = self.graph.vs() # todas os vertices do grafo
-        edges_list = self.graph.es() # todos as arestas do grafo
-        visited = [False] * self.dim # lista auxiliar para manter endereços ja adicionados a solução
-        n_visits = 0 # auxiliar para manter numero total de vertices na solução(todos os workers)
-        for worker in self.workers: # loop para cada um dos workers na solução
-            n_own_visits = ((self.dim-1)-n_visits) if (n_visits + self.p) > (self.dim-1) else self.p # numero de visitas que o worker deve realizar
-            own_visits = 0 # quantas visitas já realizou
-            worker.append(0) # iniciar rota da base(vertice 0)
-            for address in worker: # loop para cada endereço na rota do worker
-                if own_visits > n_own_visits: # worker visita ate n_own_visits endereços
+        edges_list = self.graph.es()
+        visited = [False] * self.dim
+        n_visits = 0
+        for worker in self.workers:
+            n_own_visits = ((self.dim-1)-n_visits) if (n_visits + self.p) > (self.dim-1) else self.p
+            own_visits = 0
+            worker.append(0)
+            for address in worker:
+                if own_visits == n_own_visits:
                     break
-                vertex_edges = edges_list.select(_source=address) # acessar a lista de arestas para o endereço(vertice) atual
-                l_cost = 10000 # custo alto para sempre encontrar o mais barato na lista
-                nearest = 0 # vertice com aresta de melhor custo
-                for edge in range(len(vertex_edges)): # loop para cada aresta na lista de adj do vertice
-                    if (vertex_edges[edge]['cost'] < l_cost) and (not visited[edge]):
-                        l_cost = vertex_edges[edge]['cost'] # troca o menor custo
-                        nearest = vertex_edges[edge].target # indice do vertice com o menor custo de conexao(aresta)
-                visited[nearest] = True # setar o vertice como visitado
-                worker.append(nearest) # adicionar a solução
+                vertex_edges = edges_list.select(_from=address)
+                nearest = address
+                for edge in range(len(vertex_edges)):
+                    if (vertex_edges[edge]['cost'] < vertex_edges[nearest]['cost']) and (not visited[edge]) and (vertex_edges[edge].target != 0):
+                        nearest = vertex_edges[edge].target
+                visited[nearest] = True
+                worker.append(nearest)
                 own_visits += 1
                 n_visits += 1
-        print(self.workers)
+            worker.append(0)
 
 
 if __name__ == '__main__':
-    instance = 'instances/n10p4.txt'
+    instance = 'instances/apa_cup/cup3.txt'
 
     problem = Routes(instance)
     problem.nearest_neighbor()
+    problem.print_routes()
+    problem.get_solution_value()
+    problem.write_solution_to_file('cup3.txt')
 
-    # describe_edges(g)
-    # plot_graph(g)
+
