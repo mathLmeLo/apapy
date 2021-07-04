@@ -5,3 +5,22 @@ para cada worker:
 			se (custo do vertice adj < menor) E (vertice adj nao esta na solução)
 				menor = vertice adj
 				adicionar vertice a a soluçao para esse worker
+
+-------------------------------------------------------------
+ideia: manter lista de "candidatos"
+* uma lista de inteiros, que seriam os vertices a verificar
+
+assim:
+candidatos = [ vértices de 1 a n-1]
+para cada worker:
+    solução = [0] // iniciar da base
+    enquanto len(solução) < (tamanhoDaRota + 1):
+        para cada i da solução:
+            melhorCandidato = i
+            para cada candidato:
+                para cada aresta de i com target==candidato:
+                   se (custo da aresta < custo da aresta do melhorCandidato):
+                       melhorCandidato = candidato
+           solução (união) melhorCandidato
+           candidatos.pop(melhorCandidato)
+    solução.append(0) // fim da solução
