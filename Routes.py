@@ -39,7 +39,13 @@ class Routes:
             for i, value in enumerate(worker[:len(worker)-1]):
                 edge = self.graph.es.find(_from=value, _to=worker[i+1])
                 total += edge['cost']
-        print('Solution = {}'.format(total))
+        return total
+
+    def get_solution_for_worker(self, worker):
+        total = 0
+        for i, value in enumerate(self.workers[worker][:len(self.workers[worker])-1]):
+            edge = self.graph.es.find(_from=value, _to=self.workers[worker][i+1])
+            total += edge['cost']
         return total
 
     def write_solution_to_file(self, filename):
@@ -53,10 +59,10 @@ class Routes:
                     arquivo.write(str(value) + ', ')
         arquivo.close()
 
-
     def nearest_neighbor(self):
         edges_list = self.graph.es()
         visited = [False] * self.dim
+        visited[0] = True
         n_visits = 0
         for worker in self.workers:
             n_own_visits = ((self.dim-1)-n_visits) if (n_visits + self.p) > (self.dim-1) else self.p
@@ -68,7 +74,9 @@ class Routes:
                 vertex_edges = edges_list.select(_from=address)
                 nearest = address
                 for edge in range(len(vertex_edges)):
-                    if (vertex_edges[edge]['cost'] < vertex_edges[nearest]['cost']) and (not visited[edge]) and (vertex_edges[edge].target != 0):
+                    if(visited[edge]):
+                        continue
+                    elif (vertex_edges[edge]['cost'] < vertex_edges[nearest]['cost']):
                         nearest = vertex_edges[edge].target
                 visited[nearest] = True
                 worker.append(nearest)
@@ -76,14 +84,55 @@ class Routes:
                 n_visits += 1
             worker.append(0)
 
+# busca local
+    def swap(self):
+        for worker_i, worker in enumerate(self.workers):
+            best_solution = self.get_solution_for_worker(worker_i)
+            print('Best Solution: {}'.format(best_solution))
+            best_i = None
+            best_j = None
+            for i, value_i in enumerate(worker[:len(worker)-2], start=1):
+                # print(i)
+                for j, value_j in enumerate(worker[:len(worker)-2], start=1):
+                    rm_1 = self.graph.es.find(_from=worker[i-1], _to=worker[i])
+                    rm_2 = self.graph.es.find(_from=worker[i], _to=worker[i+1])
+                    rm_3 = self.graph.es.find(_from=worker[j-1], _to=worker[j])
+                    rm_4 = self.graph.es.find(_from=worker[j], _to=worker[j+1])
+                    add_1 = self.graph.es.find(_from=worker[i-1], _to=worker[j])
+                    add_2 = self.graph.es.find(_from=worker[j], _to=worker[i+1])
+                    add_3 = self.graph.es.find(_from=worker[j-1], _to=worker[i])
+                    add_4 = self.graph.es.find(_from=worker[i], _to=worker[j+1])
+                    rm = rm_1['cost'] + rm_2['cost'] + rm_3['cost'] + rm_4['cost']
+                    add = add_1['cost'] + add_2['cost'] + add_3['cost'] + add_4['cost']
+                    new_solution = (best_solution - rm) + add
+                    if new_solution < best_solution:
+                        best_i = i
+                        best_j = j
+                        best_solution = new_solution
+            if (best_i is not None) and (best_j is not None):
+                tmp = worker[best_i]
+                worker[i] = worker[best_j]
+                worker[j] = tmp
+
+    # def vnd(self):
+    #     print('')
+
 
 if __name__ == '__main__':
-    instance = 'instances/apa_cup/cup3.txt'
+    instance = 'instances/n29p7A.txt'
 
+    # nearest neighbor
     problem = Routes(instance)
     problem.nearest_neighbor()
     problem.print_routes()
-    problem.get_solution_value()
+    print('Solution = {}'.format(problem.get_solution_value()))
+    # swap
+    print('Swap')
+    problem = Routes(instance)
+    problem.nearest_neighbor()
+    problem.swap()
+    problem.print_routes()
+    print('Solution = {}'.format(problem.get_solution_value()))
     problem.write_solution_to_file('cup3.txt')
 
 
