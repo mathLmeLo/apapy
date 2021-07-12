@@ -86,6 +86,8 @@ class Routes:
 
 # busca local
     def swap(self):
+        gain = 0
+        dif = 0
         for worker_i, worker in enumerate(self.workers):
             best_solution = self.get_solution_for_worker(worker_i)
             print('Best Solution: {}'.format(best_solution))
@@ -105,17 +107,16 @@ class Routes:
                     rm = rm_1['cost'] + rm_2['cost'] + rm_3['cost'] + rm_4['cost']
                     add = add_1['cost'] + add_2['cost'] + add_3['cost'] + add_4['cost']
                     new_solution = (best_solution - rm) + add
-                    if new_solution < best_solution:
+                    dif = new_solution - best_solution
+                    if dif < gain: # ver se realmente houve um ganho 
                         best_i = i
                         best_j = j
-                        best_solution = new_solution
-            if (best_i is not None) and (best_j is not None):
-                tmp = worker[best_i]
-                worker[i] = worker[best_j]
-                worker[j] = tmp
-
-    # def vnd(self):
-    #     print('')
+                        gain = dif
+                        j =  i + 1
+        if (best_i is not None) and (best_j is not None):
+              tmp = worker[best_i]
+              worker[best_i] = worker[best_j]
+              worker[best_j] = tmp
 
 
 if __name__ == '__main__':
