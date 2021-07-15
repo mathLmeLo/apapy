@@ -149,7 +149,10 @@ class Routes:
             if (best_i is not None) and (best_j is not None):
                 tmp = worker[best_i]
                 worker.remove(tmp)
-                worker.insert(best_j - 1, tmp)
+                if(best_j == 1):
+                  worker.insert(best_j, tmp)
+                else:
+                  worker.insert(best_j - 1, tmp)
 
     def two_opt(self):
         gain = 0
@@ -229,12 +232,12 @@ if __name__ == '__main__':
     problem.print_routes()
     print('Solution = {}'.format(problem.get_solution_value()))
     # # swap
-    print('Swap')
-    problem = Routes(instance)
-    problem.nearest_neighbor()
-    problem.swap()
-    problem.print_routes()
-    print('Solution = {}'.format(problem.get_solution_value()))
+    # print('Swap')
+    # problem = Routes(instance)
+    # problem.nearest_neighbor()
+    # problem.swap()
+    # problem.print_routes()
+    # print('Solution = {}'.format(problem.get_solution_value()))
     #
     # # reinsertion
     print('Re-insertion')
