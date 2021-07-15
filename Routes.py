@@ -36,7 +36,8 @@ class Routes:
 
     def get_solution_value(self):
         total = 0
-        for worker in self.workers:
+        for worker_i, worker in enumerate(self.workers):
+            # print('#Solution for #Worker {} = {}'.format(worker_i, self.get_solution_for_worker(worker_i)))
             for i, value in enumerate(worker[:len(worker)-1]):
                 edge = self.graph.es.find(_from=value, _to=worker[i+1])
                 total += edge['cost']
@@ -92,7 +93,7 @@ class Routes:
         dif = 0
         for worker_i, worker in enumerate(self.workers):
             best_solution = self.get_solution_for_worker(worker_i)
-            print('Best Solution: {}'.format(best_solution))
+            # print('Best Solution: {}'.format(best_solution))
             best_i = None
             best_j = None
             for i, value_i in enumerate(worker[:len(worker)-2], start=1):
@@ -124,7 +125,7 @@ class Routes:
         dif = 0
         for worker_i, worker in enumerate(self.workers):
             best_solution = self.get_solution_for_worker(worker_i)
-            print('Best Solution: {}'.format(best_solution))
+            # print('Best Solution: {}'.format(best_solution))
             best_i = None
             best_j = None
             for i, value_i in enumerate(worker[:len(worker)-2], start=1):
@@ -160,7 +161,7 @@ class Routes:
         for worker_i, worker in enumerate(self.workers):
             # distância total da rota atual
             best_solution = self.get_solution_for_worker(worker_i)
-            print('Best Solution: {}'.format(best_solution))
+            # print('Best Solution: {}'.format(best_solution))
             best_i = None
             best_j = None
             sub_prob_len = 0
@@ -195,42 +196,48 @@ class Routes:
                 tmp_j = worker[best_j]
                 k = best_j
                 worker_aux = []
-                print(worker)
+                # print(worker)
                 while k > best_i:
                     worker_aux.append(worker[k])
                     worker.remove(worker[k])
                     k -= 1
-                worker.insert(best_j - 2, worker_aux)
-
-                print(worker_aux)
-                print(worker)
+                k = 0
+                while k < sub_prob_len:
+                    worker.insert(k + best_i, worker_aux[k])
+                    k += 1
+                # worker.insert(best_j - 1, worker_aux)
+                # print(worker_aux)
+                # print(worker)
 
     def vnd(self, r):
         k = 1
         curr_solution = self.get_solution_value()
         while k <= r:
-            if k == 1:
+            if k == 3:
                 self.swap()
                 curr_solution = self.get_solution_value()
             elif k == 2:
                 self.reinsertion()
                 curr_solution = self.get_solution_value()
+            elif k == 1:
+                self.two_opt()
+                curr_solution = self.get_solution_value()
             if self.get_solution_value() < curr_solution:
-                print('Solução Atual {} X Solução Inicial {}'.format(self.get_solution_value(), initial_solution))
+                print('Solução Atual {} X Solução Inicial {}'.format(self.get_solution_value(), curr_solution))
                 k = 1
             else:
                 k += 1
-            print("K = {}".format(k))
+            # print("K = {}".format(k))
 
 
 if __name__ == '__main__':
-    instance = 'instances/apa_cup/cup3.txt'
+    instance = 'instances/apa_cup/cup2.txt'
 
     # # nearest neighbor
-    problem = Routes(instance)
-    problem.nearest_neighbor()
-    problem.print_routes()
-    print('Solution = {}'.format(problem.get_solution_value()))
+    # problem = Routes(instance)
+    # problem.nearest_neighbor()
+    # problem.print_routes()
+    # print('Solution = {}'.format(problem.get_solution_value()))
     # # swap
     # print('Swap')
     # problem = Routes(instance)
@@ -240,18 +247,26 @@ if __name__ == '__main__':
     # print('Solution = {}'.format(problem.get_solution_value()))
     #
     # # reinsertion
-    print('Re-insertion')
-    problem = Routes(instance)
-    problem.nearest_neighbor()
-    problem.reinsertion()
-    problem.print_routes()
-    print('Solution = {}'.format(problem.get_solution_value()))
-
-    # vnd
-    # print('VND')
+    # print('Re-insertion')
     # problem = Routes(instance)
     # problem.nearest_neighbor()
-    # problem.vnd(2)
+    # problem.reinsertion()
     # problem.print_routes()
     # print('Solution = {}'.format(problem.get_solution_value()))
-    # problem.write_solution_to_file('cup3.txt')
+
+    # # two_opt
+    # print('Two-Opt')
+    # problem = Routes(instance)
+    # problem.nearest_neighbor()
+    # problem.two_opt()
+    # problem.print_routes()
+    # print('Solution = {}'.format(problem.get_solution_value()))
+
+    # vnd
+    print('VND')
+    problem = Routes(instance)
+    problem.nearest_neighbor()
+    problem.vnd(3)
+    problem.print_routes()
+    print('Solution = {}'.format(problem.get_solution_value()))
+    problem.write_solution_to_file('cup2.txt')
